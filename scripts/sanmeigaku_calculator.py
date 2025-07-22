@@ -306,15 +306,82 @@ class SanmeigakuCalculator:
             "特殊性": special_destiny
         }
 
-if __name__ == '__main__':
+def run_tests():
+    """
+    テストケースを読み込み、計算結果を検証する
+    """
     calculator = SanmeigakuCalculator()
     
-    # 例：1985年12月15日生まれの女性
-    year = 1997
-    month = 9
-    day = 16
-    gender = "男性"
-    
-    meishiki = calculator.calculate_meishiki(year, month, day, gender)
-    
-    print(json.dumps(meishiki, indent=2, ensure_ascii=False))
+    try:
+        with open('data/sanmeigaku_test_cases.json', 'r', encoding='utf-8') as f:
+            test_cases = json.load(f)
+    except FileNotFoundError:
+        print("Error: data/sanmeigaku_test_cases.json not found.")
+        print("Please run sannmeigaku_scrape.py first to generate test cases.")
+        return
+
+    print("Running tests...")
+    passed_count = 0
+    failed_count = 0
+
+    for i, case in enumerate(test_cases):
+        print(f"\n--- Test Case {i+1} ---")
+        inputs = case["input"]
+        expected = case["expected_yosen"]
+        
+        print(f"Input: {inputs['year']}/{inputs['month']}/{inputs['day']} ({inputs['gender']})")
+        
+        # 自分の計算機で命式を計算
+        # 注意：現在の計算機は年月干支が固定のため、正確な比較はまだできない
+        # ここでは、比較ロジックのフレームワークを構築する
+        calculated_meishiki = calculator.calculate_meishiki(
+            inputs["year"], inputs["month"], inputs["day"], inputs["gender"]
+        )
+        
+        # 陽占の十大主星と十二大従星を結合して比較しやすい形式にする
+        calculated_yosen = {
+            **calculated_meishiki["陽占"]["十大主星"],
+            **calculated_meishiki["陽占"]["十二大従星"]
+        }
+        
+        # 比較
+        is_match = True
+        mismatched_items = {}
+        
+        # Webサイトのキー名と計算機のキー名のマッピング
+        key_map = {
+            "頭": "頭", "胸": "胸", "腹": "腹",
+            "右手": "右手", "左手": "左手",
+            "左肩": "左肩", "右足": "右足", "左足": "左足"
+        }
+
+        for web_key, calc_key in key_map.items():
+            expected_star = expected.get(web_key)
+            calculated_star = calculated_yosen.get(calc_key)
+            
+            if expected_star != calculated_star:
+                is_match = False
+                mismatched_items[web_key] = {
+                    "expected": expected_star,
+                    "calculated": calculated_star
+                }
+
+        if is_match:
+            print("Result: PASSED")
+            passed_count += 1
+        else:
+            print("Result: FAILED")
+            failed_count += 1
+            print("Mismatched items:")
+            for key, values in mismatched_items.items():
+                print(f"  - {key}: Expected '{values['expected']}', but got '{values['calculated']}'")
+
+    print("\n--- Test Summary ---")
+    print(f"Total cases: {len(test_cases)}")
+    print(f"Passed: {passed_count}")
+    print(f"Failed: {failed_count}")
+    if failed_count > 0:
+        print("\nNote: Failures are expected at this stage because the calculator uses simplified logic (fixed year/month kanshi).")
+
+if __name__ == '__main__':
+    run_tests()
