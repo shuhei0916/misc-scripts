@@ -9,23 +9,18 @@ import json
 
 class SanmeigakuCalculator:
     def __init__(self):
-        # 干支番号と干支の対応表
         self.kanshi_list = [
-            "甲子", "乙丑", "丙寅", "丁卯", "戊辰", "己巳", "庚午", "辛未", "壬申", "癸酉",  # 1-10
-            "甲戌", "乙亥", "丙子", "丁丑", "戊寅", "己卯", "庚辰", "辛巳", "壬午", "癸未",  # 11-20
-            "甲申", "乙酉", "丙戌", "丁亥", "戊子", "己丑", "庚寅", "辛卯", "壬辰", "癸巳",  # 21-30
-            "甲午", "乙未", "丙申", "丁酉", "戊戌", "己亥", "庚子", "辛丑", "壬寅", "癸卯",  # 31-40
-            "甲辰", "乙巳", "丙午", "丁未", "戊申", "己酉", "庚戌", "辛亥", "壬子", "癸丑",  # 41-50
-            "甲寅", "乙卯", "丙辰", "丁巳", "戊午", "己未", "庚申", "辛酉", "壬戌", "癸亥"   # 51-60
+            "甲子", "乙丑", "丙寅", "丁卯", "戊辰", "己巳", "庚午", "辛未", "壬申", "癸酉",
+            "甲戌", "乙亥", "丙子", "丁丑", "戊寅", "己卯", "庚辰", "辛巳", "壬午", "癸未",
+            "甲申", "乙酉", "丙戌", "丁亥", "戊子", "己丑", "庚寅", "辛卯", "壬辰", "癸巳",
+            "甲午", "乙未", "丙申", "丁酉", "戊戌", "己亥", "庚子", "辛丑", "壬寅", "癸卯",
+            "甲辰", "乙巳", "丙午", "丁未", "戊申", "己酉", "庚戌", "辛亥", "壬子", "癸丑",
+            "甲寅", "乙卯", "丙辰", "丁巳", "戊午", "己未", "庚申", "辛酉", "壬戌", "癸亥"
         ]
-        
-        # 天干
+        self.kanshi_map = {k: i + 1 for i, k in enumerate(self.kanshi_list)}
         self.tenkan = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
-        
-        # 地支
         self.chishi = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
         
-        # 天中殺分類表（干支番号 -> 天中殺）
         self.tenchukill_map = {
             1: "戌亥", 2: "戌亥", 3: "申酉", 4: "申酉", 5: "午未", 6: "午未", 7: "辰巳", 8: "辰巳", 9: "寅卯", 10: "寅卯",
             11: "子丑", 12: "子丑", 13: "戌亥", 14: "戌亥", 15: "申酉", 16: "申酉", 17: "午未", 18: "午未", 19: "辰巳", 20: "辰巳",
@@ -35,23 +30,22 @@ class SanmeigakuCalculator:
             51: "申酉", 52: "申酉", 53: "午未", 54: "午未", 55: "辰巳", 56: "辰巳", 57: "寅卯", 58: "寅卯", 59: "子丑", 60: "子丑"
         }
         
-        # 蔵干表（地支 -> 蔵干リスト）
+        # 提供された情報に基づいて蔵干表を更新
         self.zoukan_map = {
-            "子": ["癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸"],
-            "丑": ["己", "己", "己", "己", "己", "己", "己", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸", "癸"],
-            "寅": ["甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲", "甲"],
-            "卯": ["乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙", "乙"],
-            "辰": ["戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊"],
-            "巳": ["丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙", "丙"],
-            "午": ["丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁", "丁"],
-            "未": ["己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己", "己"],
-            "申": ["庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚", "庚"],
-            "酉": ["辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛", "辛"],
-            "戌": ["戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊", "戊"],
-            "亥": ["壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬", "壬"]
+            "子": ["癸"] * 31,
+            "丑": ["癸"] * 10 + ["辛"] * 3 + ["己"] * 18,
+            "寅": ["戊"] * 8 + ["丙"] * 7 + ["甲"] * 16,
+            "卯": ["乙"] * 31,
+            "辰": ["乙"] * 10 + ["癸"] * 3 + ["戊"] * 18,
+            "巳": ["戊"] * 6 + ["庚"] * 9 + ["丙"] * 16,
+            "午": ["己"] * 13 + ["丁"] * 18,
+            "未": ["丁"] * 10 + ["乙"] * 3 + ["己"] * 18,
+            "申": ["戊"] * 10 + ["壬"] * 4 + ["庚"] * 17,
+            "酉": ["辛"] * 31,
+            "戌": ["辛"] * 10 + ["丁"] * 3 + ["戊"] * 18,
+            "亥": ["甲"] * 13 + ["壬"] * 18
         }
         
-        # 十大主星表（日干と他の干の関係）
         self.judai_shusei_map = {
             ("甲", "甲"): "貫索星", ("甲", "乙"): "石門星", ("甲", "丙"): "鳳閣星", ("甲", "丁"): "調舒星", ("甲", "戊"): "禄存星",
             ("甲", "己"): "司禄星", ("甲", "庚"): "牽牛星", ("甲", "辛"): "車騎星", ("甲", "壬"): "龍高星", ("甲", "癸"): "玉堂星",
@@ -75,7 +69,6 @@ class SanmeigakuCalculator:
             ("癸", "己"): "牽牛星", ("癸", "庚"): "玉堂星", ("癸", "辛"): "龍高星", ("癸", "壬"): "石門星", ("癸", "癸"): "貫索星"
         }
         
-        # 十二大従星表（日干と地支の関係）
         self.juni_daijusei_map = {
             ("甲", "子"): "天報星", ("甲", "丑"): "天印星", ("甲", "寅"): "天貴星", ("甲", "卯"): "天恍星", ("甲", "辰"): "天南星", ("甲", "巳"): "天禄星",
             ("甲", "午"): "天将星", ("甲", "未"): "天堂星", ("甲", "申"): "天胡星", ("甲", "酉"): "天極星", ("甲", "戌"): "天庫星", ("甲", "亥"): "天馳星",
@@ -99,225 +92,136 @@ class SanmeigakuCalculator:
             ("癸", "午"): "天恍星", ("癸", "未"): "天南星", ("癸", "申"): "天禄星", ("癸", "酉"): "天将星", ("癸", "戌"): "天堂星", ("癸", "亥"): "天胡星"
         }
         
-        # 干合表
         self.kangouu_map = {
             "甲": "己", "乙": "庚", "丙": "辛", "丁": "壬", "戊": "癸",
             "己": "甲", "庚": "乙", "辛": "丙", "壬": "丁", "癸": "戊"
         }
         
-        # 異常干支
-        self.ijou_kanshi = [11, 12, 41, 42]
-    
+        self.ijou_kanshi = [11, 12, 18, 23, 24, 25, 30, 35, 36, 37, 41, 42, 48, 54]
+
+        self.getsu_kanshi_map = {
+            ("甲", "己"): {2: "丙寅", 3: "丁卯", 4: "戊辰", 5: "己巳", 6: "庚午", 7: "辛未", 8: "壬申", 9: "癸酉", 10: "甲戌", 11: "乙亥", 12: "丙子", 1: "丁丑"},
+            ("乙", "庚"): {2: "戊寅", 3: "己卯", 4: "庚辰", 5: "辛巳", 6: "壬午", 7: "癸未", 8: "甲申", 9: "乙酉", 10: "丙戌", 11: "丁亥", 12: "戊子", 1: "己丑"},
+            ("丙", "辛"): {2: "庚寅", 3: "辛卯", 4: "壬辰", 5: "癸巳", 6: "甲午", 7: "乙未", 8: "丙申", 9: "丁酉", 10: "戊戌", 11: "己亥", 12: "庚子", 1: "辛丑"},
+            ("丁", "壬"): {2: "壬寅", 3: "癸卯", 4: "甲辰", 5: "乙巳", 6: "丙午", 7: "丁未", 8: "戊申", 9: "己酉", 10: "庚戌", 11: "辛亥", 12: "壬子", 1: "癸丑"},
+            ("戊", "癸"): {2: "甲寅", 3: "乙卯", 4: "丙辰", 5: "丁巳", 6: "戊午", 7: "己未", 8: "庚申", 9: "辛酉", 10: "壬戌", 11: "癸亥", 12: "甲子", 1: "乙丑"}
+        }
+
     def get_kanshi_info(self, kanshi_num: int) -> Dict[str, str]:
-        """干支番号から干支情報を取得"""
         if kanshi_num < 1 or kanshi_num > 60:
             raise ValueError("干支番号は1-60の範囲で指定してください")
-        
         kanshi = self.kanshi_list[kanshi_num - 1]
-        tenkan = kanshi[0]
-        chishi = kanshi[1]
-        
-        return {
-            "kanshi": kanshi,
-            "tenkan": tenkan,
-            "chishi": chishi,
-            "tenchukill": self.tenchukill_map[kanshi_num]
-        }
-    
+        return {"kanshi": kanshi, "tenkan": kanshi[0], "chishi": kanshi[1], "tenchukill": self.tenchukill_map[kanshi_num]}
+
+    def get_nen_kanshi(self, year: int) -> Tuple[int, str, str]:
+        tenkan_index = (year - 4) % 10
+        chishi_index = (year - 4) % 12
+        nen_kan = self.tenkan[tenkan_index]
+        nen_shi = self.chishi[chishi_index]
+        nen_kanshi_str = nen_kan + nen_shi
+        nen_kanshi_num = self.kanshi_map[nen_kanshi_str]
+        return nen_kanshi_num, nen_kan, nen_shi
+
+    def get_getsu_kanshi(self, nen_kan: str, month: int) -> int:
+        for kan_pair, month_map in self.getsu_kanshi_map.items():
+            if nen_kan in kan_pair:
+                getsu_kanshi_str = month_map.get(month)
+                if getsu_kanshi_str:
+                    return self.kanshi_map[getsu_kanshi_str]
+        raise ValueError(f"月干支が見つかりません: 年干={nen_kan}, 月={month}")
+
     def calculate_day_kanshi(self, year: int, month: int, day: int) -> Tuple[int, int, int]:
-        """
-        生年月日から日干支番号を計算
-        簡易計算（実際の干支暦データが必要）
-        """
-        # 基準日からの日数を計算（簡易版）
-        base_date = date(1900, 1, 1)  # 基準日
+        base_date = date(1900, 1, 31)
         target_date = date(year, month, day)
         days_diff = (target_date - base_date).days
-        
-        # 日干支番号を計算（60で循環）
         day_kanshi_num = (days_diff % 60) + 1
-        if day_kanshi_num > 60:
-            day_kanshi_num -= 60
-        
-        # 前節入からの日数と次節入までの日数（仮の値）
-        # 実際には節気の計算が必要
-        prev_setsu_days = 8  # 例：前節入からの日数
-        next_setsu_days = 22  # 例：次節入までの日数
-        
+        prev_setsu_days = 8
+        next_setsu_days = 22
         return day_kanshi_num, prev_setsu_days, next_setsu_days
-    
+
     def get_zoukan(self, chishi: str, days_from_setsu: int) -> str:
-        """蔵干を取得"""
-        if chishi not in self.zoukan_map:
-            raise ValueError(f"不正な地支: {chishi}")
-        
-        zoukan_list = self.zoukan_map[chishi]
-        index = min(days_from_setsu - 1, len(zoukan_list) - 1)
+        zoukan_list = self.zoukan_map.get(chishi)
+        if not zoukan_list: raise ValueError(f"不正な地支: {chishi}")
+        index = min(days_from_setsu, len(zoukan_list) - 1)
         return zoukan_list[index]
-    
+
     def get_judai_shusei(self, nikkan: str, target_kan: str) -> str:
-        """十大主星を取得"""
-        key = (nikkan, target_kan)
-        return self.judai_shusei_map.get(key, "不明")
-    
+        return self.judai_shusei_map.get((nikkan, target_kan), "不明")
+
     def get_juni_daijusei(self, nikkan: str, target_shi: str) -> str:
-        """十二大従星を取得"""
-        key = (nikkan, target_shi)
-        return self.juni_daijusei_map.get(key, "不明")
-    
+        return self.juni_daijusei_map.get((nikkan, target_shi), "不明")
+
     def calculate_taiun(self, gender: str, year_kanshi_num: int, next_setsu_days: int) -> Tuple[str, int]:
-        """大運の方向と歳運を計算"""
         year_kanshi_info = self.get_kanshi_info(year_kanshi_num)
-        year_tenkan = year_kanshi_info["tenkan"]
-        
-        # 陽干か陰干かを判定
-        is_you_kan = year_tenkan in ["甲", "丙", "戊", "庚", "壬"]
-        
-        # 大運の方向を決定
-        if is_you_kan:
-            direction = "順回り" if gender == "男性" else "逆回り"
-        else:
-            direction = "逆回り" if gender == "男性" else "順回り"
-        
-        # 歳運を計算
-        if direction == "順回り":
-            saiun = round(next_setsu_days / 3)
-        else:
-            # 逆回りの場合は前節入からの日数を使用（簡易計算）
-            saiun = round(8 / 3)  # 仮の値
-        
-        if saiun == 0:
-            saiun = 1
-        elif saiun == 11:
-            saiun = 10
-        
+        is_you_kan = year_kanshi_info["tenkan"] in ["甲", "丙", "戊", "庚", "壬"]
+        direction = ("順回り" if gender == "男性" else "逆回り") if is_you_kan else ("逆回り" if gender == "男性" else "順回り")
+        saiun = round(next_setsu_days / 3) if direction == "順回り" else round(8 / 3)
+        if saiun == 0: saiun = 1
+        elif saiun == 11: saiun = 10
         return direction, saiun
-    
+
     def check_special_destiny(self, insen: Dict) -> Dict[str, bool]:
-        """宿命の特殊性をチェック"""
         special = {}
-        
-        # 異常干支チェック
-        special["異常干支"] = any(
-            insen[key]["kanshi_num"] in self.ijou_kanshi 
-            for key in ["年", "月", "日"]
-        )
-        
-        # 宿命天中殺チェック
+        special["異常干支"] = any(insen[key]["kanshi_num"] in self.ijou_kanshi for key in ["年", "月", "日"])
         tenchukill = insen["日"]["tenchukill"]
-        year_shi = insen["年"]["chishi"]
-        month_shi = insen["月"]["chishi"]
+        special["生年天中殺"] = insen["年"]["chishi"] in tenchukill
+        special["生月天中殺"] = insen["月"]["chishi"] in tenchukill
         day_kanshi_num = insen["日"]["kanshi_num"]
-        
-        # 生年天中殺
-        special["生年天中殺"] = year_shi in tenchukill
-        
-        # 生月天中殺
-        special["生月天中殺"] = month_shi in tenchukill
-        
-        # 日座中殺
         special["日座中殺"] = day_kanshi_num in [11, 12]
-        
-        # 日居中殺
         special["日居中殺"] = day_kanshi_num in [41, 42]
-        
         return special
-    
+
     def calculate_meishiki(self, year: int, month: int, day: int, gender: str) -> Dict:
-        """命式を計算"""
-        # 仮の年月干支（実際には干支暦データが必要）
-        year_kanshi_num = 2  # 乙丑（例）
-        month_kanshi_num = 25  # 戊子（例）
+        adj_year, adj_month = (year, month)
+        if month == 1 or (month == 2 and day <= 3):
+            adj_year -= 1
         
-        # 日干支を計算
+        year_kanshi_num, nen_kan, _ = self.get_nen_kanshi(adj_year)
+        month_kanshi_num = self.get_getsu_kanshi(nen_kan, adj_month)
         day_kanshi_num, prev_setsu_days, next_setsu_days = self.calculate_day_kanshi(year, month, day)
         
-        # 各干支情報を取得
         year_info = self.get_kanshi_info(year_kanshi_num)
         month_info = self.get_kanshi_info(month_kanshi_num)
         day_info = self.get_kanshi_info(day_kanshi_num)
         
-        # 蔵干を計算
         year_zoukan = self.get_zoukan(year_info["chishi"], prev_setsu_days)
         month_zoukan = self.get_zoukan(month_info["chishi"], prev_setsu_days)
         day_zoukan = self.get_zoukan(day_info["chishi"], prev_setsu_days)
         
-        # 陰占
         insen = {
-            "年": {
-                "kanshi_num": year_kanshi_num,
-                "tenkan": year_info["tenkan"],
-                "chishi": year_info["chishi"],
-                "zoukan": year_zoukan
-            },
-            "月": {
-                "kanshi_num": month_kanshi_num,
-                "tenkan": month_info["tenkan"],
-                "chishi": month_info["chishi"],
-                "zoukan": month_zoukan
-            },
-            "日": {
-                "kanshi_num": day_kanshi_num,
-                "tenkan": day_info["tenkan"],
-                "chishi": day_info["chishi"],
-                "zoukan": day_zoukan,
-                "tenchukill": day_info["tenchukill"]
-            }
+            "年": {"kanshi_num": year_kanshi_num, "tenkan": year_info["tenkan"], "chishi": year_info["chishi"], "zoukan": year_zoukan},
+            "月": {"kanshi_num": month_kanshi_num, "tenkan": month_info["tenkan"], "chishi": month_info["chishi"], "zoukan": month_zoukan},
+            "日": {"kanshi_num": day_kanshi_num, "tenkan": day_info["tenkan"], "chishi": day_info["chishi"], "zoukan": day_zoukan, "tenchukill": day_info["tenchukill"]}
         }
         
-        # 陽占
         nikkan = insen["日"]["tenkan"]
-        
-        # 十大主星
         judai_shusei = {
-            "頭": self.get_judai_shusei(nikkan, insen["年"]["tenkan"]),
-            "右手": self.get_judai_shusei(nikkan, insen["日"]["zoukan"]),
-            "胸": self.get_judai_shusei(nikkan, insen["月"]["zoukan"]),
-            "左手": self.get_judai_shusei(nikkan, insen["年"]["zoukan"]),
-            "腹": self.get_judai_shusei(nikkan, insen["月"]["tenkan"]),
-            "右肩": self.get_judai_shusei(nikkan, self.kangouu_map.get(insen["年"]["tenkan"], ""))
+            "頭": self.get_judai_shusei(nikkan, insen["年"]["tenkan"]), "右手": self.get_judai_shusei(nikkan, insen["日"]["zoukan"]),
+            "胸": self.get_judai_shusei(nikkan, insen["月"]["zoukan"]), "左手": self.get_judai_shusei(nikkan, insen["年"]["zoukan"]),
+            "腹": self.get_judai_shusei(nikkan, insen["月"]["tenkan"]), "右肩": self.get_judai_shusei(nikkan, self.kangouu_map.get(insen["年"]["tenkan"], ""))
         }
-        
-        # 十二大従星
         juni_daijusei = {
-            "左肩": self.get_juni_daijusei(nikkan, insen["年"]["chishi"]),
-            "左足": self.get_juni_daijusei(nikkan, insen["日"]["chishi"]),
+            "左肩": self.get_juni_daijusei(nikkan, insen["年"]["chishi"]), "左足": self.get_juni_daijusei(nikkan, insen["日"]["chishi"]),
             "右足": self.get_juni_daijusei(nikkan, insen["月"]["chishi"])
         }
+        yosen = {"十大主星": judai_shusei, "十二大従星": juni_daijusei}
         
-        yosen = {
-            "十大主星": judai_shusei,
-            "十二大従星": juni_daijusei
-        }
-        
-        # 大運
         taiun_direction, taiun_saiun = self.calculate_taiun(gender, year_kanshi_num, next_setsu_days)
-        
-        # 特殊性
         special_destiny = self.check_special_destiny(insen)
         
         return {
-            "陰占": insen,
-            "陽占": yosen,
-            "大運": {
-                "方向": taiun_direction,
-                "歳運": taiun_saiun
-            },
+            "陰占": insen, "陽占": yosen,
+            "大運": {"方向": taiun_direction, "歳運": taiun_saiun},
             "特殊性": special_destiny
         }
 
 def run_tests():
-    """
-    テストケースを読み込み、計算結果を検証する
-    """
     calculator = SanmeigakuCalculator()
-    
     try:
         with open('data/sanmeigaku_test_cases.json', 'r', encoding='utf-8') as f:
             test_cases = json.load(f)
     except FileNotFoundError:
         print("Error: data/sanmeigaku_test_cases.json not found.")
-        print("Please run sannmeigaku_scrape.py first to generate test cases.")
         return
 
     print("Running tests...")
@@ -328,43 +232,21 @@ def run_tests():
         print(f"\n--- Test Case {i+1} ---")
         inputs = case["input"]
         expected = case["expected_yosen"]
-        
         print(f"Input: {inputs['year']}/{inputs['month']}/{inputs['day']} ({inputs['gender']})")
         
-        # 自分の計算機で命式を計算
-        # 注意：現在の計算機は年月干支が固定のため、正確な比較はまだできない
-        # ここでは、比較ロジックのフレームワークを構築する
-        calculated_meishiki = calculator.calculate_meishiki(
-            inputs["year"], inputs["month"], inputs["day"], inputs["gender"]
-        )
+        calculated_meishiki = calculator.calculate_meishiki(inputs["year"], inputs["month"], inputs["day"], inputs["gender"])
+        calculated_yosen = {**calculated_meishiki["陽占"]["十大主星"], **calculated_meishiki["陽占"]["十二大従星"]}
         
-        # 陽占の十大主星と十二大従星を結合して比較しやすい形式にする
-        calculated_yosen = {
-            **calculated_meishiki["陽占"]["十大主星"],
-            **calculated_meishiki["陽占"]["十二大従星"]
-        }
-        
-        # 比較
         is_match = True
         mismatched_items = {}
-        
-        # Webサイトのキー名と計算機のキー名のマッピング
-        key_map = {
-            "頭": "頭", "胸": "胸", "腹": "腹",
-            "右手": "右手", "左手": "左手",
-            "左肩": "左肩", "右足": "右足", "左足": "左足"
-        }
+        key_map = {"頭": "頭", "胸": "胸", "腹": "腹", "右手": "右手", "左手": "左手", "左肩": "左肩", "右足": "右足", "左足": "左足"}
 
         for web_key, calc_key in key_map.items():
             expected_star = expected.get(web_key)
             calculated_star = calculated_yosen.get(calc_key)
-            
             if expected_star != calculated_star:
                 is_match = False
-                mismatched_items[web_key] = {
-                    "expected": expected_star,
-                    "calculated": calculated_star
-                }
+                mismatched_items[web_key] = {"expected": expected_star, "calculated": calculated_star}
 
         if is_match:
             print("Result: PASSED")
@@ -381,7 +263,7 @@ def run_tests():
     print(f"Passed: {passed_count}")
     print(f"Failed: {failed_count}")
     if failed_count > 0:
-        print("\nNote: Failures are expected at this stage because the calculator uses simplified logic (fixed year/month kanshi).")
+        print("\nNote: Failures may still occur due to simplified logic for setsuiri (節入り).")
 
 if __name__ == '__main__':
     run_tests()
